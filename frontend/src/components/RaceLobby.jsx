@@ -171,6 +171,12 @@ function RaceLobby({ user, onLogout, onUpdateUser }) {
     if (update.participants) {
       setParticipants(update.participants)
       
+      // Update current user's ready status
+      const currentUserParticipant = update.participants.find(p => p.userId === currentUser.userId)
+      if (currentUserParticipant) {
+        setIsReady(currentUserParticipant.ready)
+      }
+      
       // Check if all ready
       const allPlayersReady = update.participants.length > 0 && 
         update.participants.every(p => p.ready)

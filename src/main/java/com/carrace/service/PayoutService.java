@@ -31,20 +31,28 @@ public class PayoutService {
     public void calculatePayouts(Long raceId, Long winnerCarId) {
         List<Bet> pendingBets = betRepository.findByRaceIdAndStatus(raceId, BetStatus.PENDING);
         
-        // Get the winning car to access its win probability
+        // Get the winning car for fallback odds if needed
         Car winningCar = carRepository.findById(winnerCarId)
             .orElseThrow(() -> new RuntimeException("Winning car not found: " + winnerCarId));
         
         for (Bet bet : pendingBets) {
             if (bet.getCarId().equals(winnerCarId)) {
-                // Winning bet - use car's win probability as multiplier
+                // Winning bet - use stored odds from bet
                 BigDecimal payout;
                 if (bet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                     // Free bet - fixed $250 payout
                     payout = new BigDecimal("250.00");
                 } else {
-                    // Regular bet - multiply by car's odds
-                    payout = bet.getAmount().multiply(BigDecimal.valueOf(winningCar.getWinProbability()));
+                    // Regular bet - multiply by odds at time of betting
+                    // Use stored odds, or fallback to car's current odds if not set
+                    Double odds = bet.getOdds();
+                    if (odds == null) {
+                        odds = winningCar.getWinProbability();
+                        if (odds == null) {
+                            odds = 2.0;
+                        }
+                    }
+                    payout = bet.getAmount().multiply(BigDecimal.valueOf(odds));
                 }
                 bet.setStatus(BetStatus.WON);
                 bet.setPayout(payout);

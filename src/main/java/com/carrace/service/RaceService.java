@@ -12,6 +12,7 @@ import com.carrace.model.RaceStatus;
 import com.carrace.repository.CarRepository;
 import com.carrace.repository.RaceRepository;
 import com.carrace.util.CarNameGenerator;
+import com.carrace.websocket.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class RaceService {
     private final RaceRepository raceRepository;
     private final CarRepository carRepository;
     private final KafkaEventProducer eventProducer;
+    private final WebSocketService webSocketService;
     
     @Value("${race.default.cars:4}")
     private int defaultCarsPerRace;
@@ -46,13 +50,38 @@ public class RaceService {
         
         race = raceRepository.save(race);
         
-        // Create default cars for the race with random names and probabilities
+        // Create cars with unique win probabilities
+        // Lower odds = slightly better chance, but MUCH closer together for competitive racing!
+        // Most cars have similar odds (2.0x-3.0x), with one potential underdog at ~4.0x
+        java.util.List<Double> allOdds = new java.util.ArrayList<>();
+        
+        // Generate competitive odds where everyone has a real chance
+        // Most cars clustered in 2.0x-3.0x range (very competitive!)
+        if (defaultCarsPerRace <= 1) {
+            allOdds.add(2.5);
+        } else {
+            // Generate most cars in tight 2.0x-3.0x range
+            double competitiveRange = 1.0; // 3.0 - 2.0 = 1.0
+            double step = competitiveRange / Math.max(1, defaultCarsPerRace - 2); // Reserve one slot for underdog
+            
+            for (int i = 0; i < defaultCarsPerRace - 1; i++) {
+                Double odds = 2.0 + (step * i);
+                odds = Math.round(odds * 10.0) / 10.0;
+                allOdds.add(odds);
+            }
+            
+            // Add one underdog at 4.0x (still has ~35% chance at FAST bracket!)
+            allOdds.add(4.0);
+        }
+        
+        // Shuffle odds to randomly assign to cars
+        java.util.Collections.shuffle(allOdds);
+        
+        // Create cars with shuffled unique odds
         for (int i = 0; i < defaultCarsPerRace; i++) {
             String carName = CarNameGenerator.generate();
             String carColor = com.carrace.util.ColorGenerator.generateVibrantHex();
-            // Generate random win probability between 1.5x and 5.0x
-            Double winProbability = 1.5 + (Math.random() * 3.5);
-            winProbability = Math.round(winProbability * 10.0) / 10.0; // Round to 1 decimal
+            Double winProbability = allOdds.get(i);
             
             Car car = new Car(carName, carColor, winProbability);
             car.setRace(race);
@@ -83,6 +112,13 @@ public class RaceService {
             System.currentTimeMillis()
         );
         eventProducer.publishRaceStarted(event);
+        
+        // Broadcast race started via WebSocket
+        Map<String, Object> update = new HashMap<>();
+        update.put("type", "RACE_STARTED");
+        update.put("raceId", raceId);
+        update.put("status", "RUNNING");
+        webSocketService.sendRaceUpdate(raceId, update);
         
         log.info("Started race {}", raceId);
     }

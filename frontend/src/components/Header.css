@@ -1,14 +1,16 @@
 .app-header {
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--surface), var(--surface-light));
   border-bottom: 2px solid var(--border);
-  padding: 15px 30px;
+  padding: 14px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .header-left {
@@ -18,118 +20,218 @@
 }
 
 .header-title {
-  font-size: 1.8rem;
-  background: var(--gradient-green);
+  font-size: 1.6rem;
+  background: linear-gradient(135deg, var(--primary), #00ccff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   margin: 0;
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+  position: relative;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
+  }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
 .user-balance {
-  background: var(--background);
-  padding: 10px 20px;
-  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  padding: 12px 24px;
+  border-radius: 12px;
   border: 2px solid var(--primary);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-balance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.user-balance:hover::before {
+  left: 100%;
 }
 
 .user-balance:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+  border-color: var(--primary-light);
 }
 
 .balance-label {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
 }
 
 .balance-amount {
   font-family: 'Orbitron', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-weight: 800;
   color: var(--primary);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  position: relative;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 15px;
-  background: var(--background);
-  border-radius: 10px;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 15px rgba(0, 204, 255, 0.2);
 }
 
 .user-avatar {
-  font-size: 24px;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  animation: avatarFloat 3s ease-in-out infinite;
+}
+
+@keyframes avatarFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .username {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
 }
 
 .user-nametag {
   background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #1a1a2e;
-  padding: 2px 8px;
-  border-radius: 4px;
+  color: #000;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: bold;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.5);
 }
 
 .btn-shop {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
   border: 2px solid #00d4ff;
-  background: transparent;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), transparent);
   color: #00d4ff;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   font-size: 0.9rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shop::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-shop:hover::before {
+  left: 100%;
 }
 
 .btn-shop:hover {
-  background: #00d4ff;
-  color: #1a1a2e;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: #000;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
 }
 
 .btn-logout {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
   border: 2px solid var(--danger);
-  background: transparent;
+  background: linear-gradient(135deg, rgba(255, 0, 102, 0.1), transparent);
   color: var(--danger);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   font-size: 0.9rem;
 }
 
 .btn-logout:hover {
-  background: var(--danger);
-  color: var(--background);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 0, 102, 0.3);
+  background: linear-gradient(135deg, var(--danger), #cc0052);
+  color: var(--text);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 0, 102, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 15px 20px;
+    flex-wrap: wrap;
+  }
+
+  .header-title {
+    font-size: 1.5rem;
+  }
+
+  .header-right {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .user-balance,
+  .btn-shop,
+  .btn-logout {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .balance-amount {
+    font-size: 1.3rem;
+  }
 }

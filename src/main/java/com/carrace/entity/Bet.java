@@ -35,6 +35,9 @@ public class Bet {
     @Column(nullable = false)
     private BigDecimal amount;
     
+    @Column
+    private Double odds; // Odds at the time of betting (e.g., 2.0x, 3.5x)
+    
     @Column(nullable = false)
     private Boolean isFreeBet = false;
     

@@ -64,6 +64,11 @@ public class LobbyService {
     }
     
     public void setReady(Long raceId, Long userId, boolean ready) {
+        // Ensure user is in participants when they ready up (auto-join)
+        if (ready) {
+            raceParticipants.computeIfAbsent(raceId, k -> ConcurrentHashMap.newKeySet()).add(userId);
+        }
+        
         Set<Long> readySet = readyPlayers.computeIfAbsent(raceId, k -> ConcurrentHashMap.newKeySet());
         
         if (ready) {
@@ -126,12 +131,36 @@ public class LobbyService {
             return;
         }
         
-        boolean allReady = participants.size() > 0 && participants.equals(ready);
+        // Only require participants with bets to be ready
+        List<User> participantsWithBets = new ArrayList<>();
+        for (Long userId : participants) {
+            Bet bet = betRepository.findByUserIdAndRaceId(userId, raceId).orElse(null);
+            if (bet != null) {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    participantsWithBets.add(user);
+                }
+            }
+        }
         
-        if (allReady) {
+        // If no one has bet yet, don't start countdown
+        if (participantsWithBets.isEmpty()) {
+            allReadyTimestamp.remove(raceId);
+            return;
+        }
+        
+        // Check if all betters are ready
+        Set<Long> betterIds = participantsWithBets.stream()
+            .map(User::getId)
+            .collect(java.util.stream.Collectors.toSet());
+        
+        boolean allBettersReady = betterIds.stream().allMatch(ready::contains);
+        
+        if (allBettersReady) {
             if (!allReadyTimestamp.containsKey(raceId)) {
                 allReadyTimestamp.put(raceId, System.currentTimeMillis());
-                log.info("All players ready for race {}, starting countdown", raceId);
+                log.info("All players with bets ready for race {} ({} players), starting countdown", 
+                    raceId, betterIds.size());
             }
         } else {
             allReadyTimestamp.remove(raceId);

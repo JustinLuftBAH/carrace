@@ -1,6 +1,7 @@
 package com.carrace.config;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,15 @@ public class KafkaStreamsConfig {
     @Value("${kafka.streams.application-id:carrace-leaderboard-streams}")
     private String applicationId;
     
+    @Value("${spring.kafka.properties.security.protocol:}")
+    private String securityProtocol;
+    
+    @Value("${spring.kafka.properties.sasl.mechanism:}")
+    private String saslMechanism;
+    
+    @Value("${spring.kafka.properties.sasl.jaas.config:}")
+    private String saslJaasConfig;
+    
     @Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
     public KafkaStreamsConfiguration kStreamsConfig() {
         Map<String, Object> props = new HashMap<>();
@@ -33,6 +43,13 @@ public class KafkaStreamsConfig {
         props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 2);
         props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
         props.put(AdminClientConfig.RETRIES_CONFIG, 10);
+        
+        // Add security settings if using Confluent Cloud
+        if (securityProtocol != null && !securityProtocol.isEmpty()) {
+            props.put("security.protocol", securityProtocol);
+            props.put(SaslConfigs.SASL_MECHANISM, saslMechanism);
+            props.put(SaslConfigs.SASL_JAAS_CONFIG, saslJaasConfig);
+        }
         
         return new KafkaStreamsConfiguration(props);
     }

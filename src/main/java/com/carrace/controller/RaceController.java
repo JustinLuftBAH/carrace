@@ -107,7 +107,8 @@ public class RaceController {
                 car.getName(),
                 car.getColor(),
                 car.getPosition(),
-                car.getSpeed()
+                car.getSpeed(),
+                car.getWinProbability()
             ))
             .collect(Collectors.toList());
         

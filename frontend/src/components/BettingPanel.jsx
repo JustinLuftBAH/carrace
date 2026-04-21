@@ -39,7 +39,9 @@ function BettingPanel({ cars, balance, myBet, onPlaceBet, disabled }) {
   if (myBet) {
     const betCar = cars.find(c => c.id === myBet.carId)
     const isFree = myBet.amount === 0
-    const potentialWin = isFree ? 250 : (myBet.amount * (betCar?.winProbability || 2.0))
+    // Use stored odds from bet if available, otherwise fallback to car's current odds or 2.0
+    const odds = myBet.odds || betCar?.winProbability || 2.0
+    const potentialWin = isFree ? 250 : (myBet.amount * odds)
     return (
       <div className="betting-panel placed">
         <h3>Your Bet</h3>
@@ -50,9 +52,7 @@ function BettingPanel({ cars, balance, myBet, onPlaceBet, disabled }) {
               style={{ background: betCar?.color }}
             />
             <span>{betCar?.name || `Car ${myBet.carId}`}</span>
-            {betCar?.winProbability && (
-              <span className="car-odds">{betCar.winProbability}x</span>
-            )}
+            <span className="car-odds">{odds}x</span>
           </div>
           <div className="bet-amount">{isFree ? 'FREE' : `$${myBet.amount}`}</div>
         </div>
@@ -67,25 +67,43 @@ function BettingPanel({ cars, balance, myBet, onPlaceBet, disabled }) {
     <div className="betting-panel">
       <h3>Place Your Bet</h3>
       
+      <p className="betting-hint-text">💡 Lower odds = Higher chance to win, Higher odds = Bigger payout</p>
+      
       <div className="car-selection">
-        {cars.map(car => (
-          <div
-            key={car.id}
-            className={`car-option ${selectedCar === car.id ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
-            onClick={() => !disabled && setSelectedCar(car.id)}
-          >
-            <div 
-              className="car-color" 
-              style={{ background: car.color }}
-            />
-            <div className="car-details">
-              <span className="car-name">{car.name}</span>
-              {car.winProbability && (
-                <span className="car-odds-small">{car.winProbability}x</span>
-              )}
+        {cars.map(car => {
+          const odds = car.winProbability || 2.0
+          
+          // Find the car with lowest odds (favorite) and highest odds (longshot)
+          const minOdds = Math.min(...cars.map(c => c.winProbability || 2.0))
+          const maxOdds = Math.max(...cars.map(c => c.winProbability || 2.0))
+          const hasVariance = maxOdds !== minOdds // Only show badges if odds differ
+          
+          const isFavorite = hasVariance && odds === minOdds
+          const isLongshot = hasVariance && odds === maxOdds
+          
+          return (
+            <div
+              key={car.id}
+              className={`car-option ${selectedCar === car.id ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
+              onClick={() => !disabled && setSelectedCar(car.id)}
+            >
+              <div 
+                className="car-color" 
+                style={{ background: car.color }}
+              />
+              <div className="car-details">
+                <div className="car-name-row">
+                  <span className="car-name">{car.name}</span>
+                  {isFavorite && <span className="car-tag favorite">⭐ Favorite</span>}
+                  {isLongshot && <span className="car-tag longshot">🎲 Long Shot</span>}
+                </div>
+                {car.winProbability && (
+                  <span className="car-odds-small">{car.winProbability}x payout</span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="bet-amount-section">

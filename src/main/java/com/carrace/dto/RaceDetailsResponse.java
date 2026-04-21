@@ -26,6 +26,7 @@ public class RaceDetailsResponse {
         private String color;
         private Integer position;
         private Double speed;
+        private Double winProbability;
     }
     
     @Data

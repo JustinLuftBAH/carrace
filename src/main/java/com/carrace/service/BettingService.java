@@ -1,6 +1,7 @@
 package com.carrace.service;
 
 import com.carrace.entity.Bet;
+import com.carrace.entity.Car;
 import com.carrace.entity.Race;
 import com.carrace.entity.User;
 import com.carrace.event.BetPlacedEvent;
@@ -12,6 +13,7 @@ import com.carrace.kafka.KafkaEventProducer;
 import com.carrace.model.BetStatus;
 import com.carrace.model.RaceStatus;
 import com.carrace.repository.BetRepository;
+import com.carrace.repository.CarRepository;
 import com.carrace.repository.RaceRepository;
 import com.carrace.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class BettingService {
     private final BetRepository betRepository;
     private final UserRepository userRepository;
     private final RaceRepository raceRepository;
+    private final CarRepository carRepository;
     private final KafkaEventProducer eventProducer;
     
     @Transactional
@@ -39,7 +42,9 @@ public class BettingService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
         
-        if (user.getBalance().compareTo(amount) < 0) {
+        boolean isFreeBet = amount.compareTo(BigDecimal.ZERO) == 0;
+        
+        if (!isFreeBet && user.getBalance().compareTo(amount) < 0) {
             throw new InsufficientBalanceException(
                 "Insufficient balance. Available: " + user.getBalance() + ", Required: " + amount);
         }
@@ -53,6 +58,15 @@ public class BettingService {
                 "Cannot place bet on race in status: " + race.getStatus());
         }
         
+        // Validate car exists and get its odds
+        Car car = carRepository.findById(carId)
+            .orElseThrow(() -> new InvalidStateException("Car not found: " + carId));
+        
+        Double odds = car.getWinProbability();
+        if (odds == null) {
+            odds = 2.0; // Default odds if not set
+        }
+        
         // Check if user already has a bet on this race
         Optional<Bet> existingBet = betRepository.findByUserIdAndRaceId(userId, raceId);
         if (existingBet.isPresent()) {
@@ -60,9 +74,11 @@ public class BettingService {
                 "User already has a bet on this race");
         }
         
-        // Deduct balance from user
-        user.setBalance(user.getBalance().subtract(amount));
-        userRepository.save(user);
+        // Deduct balance from user (only for non-free bets)
+        if (!isFreeBet) {
+            user.setBalance(user.getBalance().subtract(amount));
+            userRepository.save(user);
+        }
         
         // Create bet
         Bet bet = new Bet();
@@ -70,15 +86,21 @@ public class BettingService {
         bet.setRaceId(raceId);
         bet.setCarId(carId);
         bet.setAmount(amount);
+        bet.setOdds(odds); // Store odds at time of betting
+        bet.setIsFreeBet(isFreeBet);
         bet.setStatus(BetStatus.PENDING);
         bet.setPlacedAt(LocalDateTime.now());
         bet = betRepository.save(bet);
         
-        // Publish bet placed event
-        BetPlacedEvent event = new BetPlacedEvent(
-            userId, raceId, carId, amount, System.currentTimeMillis()
-        );
-        eventProducer.publishBetPlaced(event);
+        // Publish bet placed event (non-blocking, log errors but don't fail)
+        try {
+            BetPlacedEvent event = new BetPlacedEvent(
+                userId, raceId, carId, amount, System.currentTimeMillis()
+            );
+            eventProducer.publishBetPlaced(event);
+        } catch (Exception e) {
+            log.warn("Failed to publish bet placed event for bet {}: {}", bet.getId(), e.getMessage());
+        }
         
         log.info("User {} placed bet {} on car {} in race {} for amount {}", 
             userId, bet.getId(), carId, raceId, amount);
