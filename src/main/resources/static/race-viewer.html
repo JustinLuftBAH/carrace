@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Race - Live Race Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .controls input, .controls button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .controls button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .controls button:hover {
+            background: #45a049;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background: #4CAF50;
+        }
+        .status.disconnected {
+            background: #f44336;
+        }
+        .race-track {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .car {
+            background: #333;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .car-progress {
+            height: 30px;
+            background: #555;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .car-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.2s;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-weight: bold;
+        }
+        .leaderboard {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .leaderboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .leaderboard th, .leaderboard td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        .leaderboard th {
+            background: #333;
+        }
+        .winner {
+            background: #FFD700 !important;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏁 Car Race - Live Viewer 🏁</h1>
+    
+    <div class="controls">
+        <h3>Connection</h3>
+        <div id="status" class="status disconnected">Disconnected</div>
+        <input type="number" id="raceId" placeholder="Enter Race ID" value="1" />
+        <button onclick="connect()">Connect to Race</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <div class="race-track">
+        <h2>Race Track</h2>
+        <div id="track">
+            <p>Connect to a race to see live updates...</p>
+        </div>
+    </div>
+    
+    <div class="leaderboard">
+        <h2>Leaderboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Car</th>
+                    <th>Position</th>
+                    <th>Speed</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard">
+                <tr>
+                    <td colspan="4">No data yet...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        let stompClient = null;
+        let currentRaceId = null;
+        const FINISH_LINE = 1000;
+        
+        function connect() {
+            const raceId = document.getElementById('raceId').value;
+            if (!raceId) {
+                alert('Please enter a race ID');
+                return;
+            }
+            
+            currentRaceId = raceId;
+            
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+                updateStatus(true);
+                
+                // Subscribe to race updates
+                stompClient.subscribe('/topic/race/' + raceId, function(message) {
+                    const update = JSON.parse(message.body);
+                    console.log('Received update:', update);
+                    updateRaceView(update);
+                });
+            }, function(error) {
+                console.error('Connection error:', error);
+                updateStatus(false);
+            });
+        }
+        
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            updateStatus(false);
+            console.log('Disconnected');
+        }
+        
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.textContent = 'Connected to Race ' + currentRaceId;
+                statusDiv.className = 'status connected';
+            } else {
+                statusDiv.textContent = 'Disconnected';
+                statusDiv.className = 'status disconnected';
+            }
+        }
+        
+        function updateRaceView(data) {
+            if (!data.leaderboard || data.leaderboard.length === 0) {
+                return;
+            }
+            
+            // Update track visualization
+            const track = document.getElementById('track');
+            track.innerHTML = '';
+            
+            data.leaderboard.forEach((car, index) => {
+                const percentage = (car.position / FINISH_LINE) * 100;
+                const carDiv = document.createElement('div');
+                carDiv.className = 'car';
+                carDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>${car.carName}</strong>
+                        <span>Position: ${car.position} / ${FINISH_LINE}</span>
+                    </div>
+                    <div class="car-progress">
+                        <div class="car-bar" style="width: ${percentage}%">
+                            ${percentage >= 10 ? Math.round(percentage) + '%' : ''}
+                        </div>
+                    </div>
+                    <div>Speed: ${car.speed.toFixed(1)} units/update</div>
+                `;
+                
+                if (car.position >= FINISH_LINE) {
+                    carDiv.className += ' winner';
+                }
+                
+                track.appendChild(carDiv);
+            });
+            
+            // Update leaderboard table
+            const leaderboardBody = document.getElementById('leaderboard');
+            leaderboardBody.innerHTML = '';
+            
+            data.leaderboard.forEach((car, index) => {
+                const row = document.createElement('tr');
+                if (car.position >= FINISH_LINE) {
+                    row.className = 'winner';
+                }
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${car.carName}</td>
+                    <td>${car.position}</td>
+                    <td>${car.speed.toFixed(2)}</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

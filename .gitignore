@@ -1,0 +1,55 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac ###
+.DS_Store
+
+### Environment Variables ###
+# NEVER commit .env file - contains API keys and secrets!
+.env
+
+### Database Files ###
+# H2 database files (persistent storage)
+data/
+*.db
+*.mv.db
+*.trace.db
+
+### Log Files ###
+backend.log
+*.log
+
+### Application Properties with Sensitive Info ###
+# Note: Now using .env instead, but keep this for safety
+application-confluent.properties.local

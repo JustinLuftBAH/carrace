@@ -1,0 +1,59 @@
+.ready-timer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ready-timer {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 50px;
+  text-align: center;
+  border: 3px solid var(--primary);
+  box-shadow: 0 0 50px rgba(0, 255, 136, 0.5);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.ready-timer h2 {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.countdown {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--primary);
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+  animation: countdownPulse 1s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.ready-timer p {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}

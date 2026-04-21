@@ -1,0 +1,235 @@
+.race-track-container {
+  background: var(--surface);
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px solid var(--border);
+  margin: 20px 0;
+}
+
+.race-track-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.race-track-header h2 {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.race-status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.race-status-badge[data-status="CREATED"] {
+  background: rgba(255, 170, 0, 0.2);
+  color: var(--warning);
+  border: 2px solid var(--warning);
+}
+
+.race-status-badge[data-status="RUNNING"] {
+  background: rgba(0, 255, 136, 0.2);
+  color: var(--success);
+  border: 2px solid var(--success);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.race-status-badge[data-status="FINISHED"] {
+  background: rgba(255, 0, 102, 0.2);
+  color: var(--danger);
+  border: 2px solid var(--danger);
+}
+
+.race-track {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.no-cars {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+
+.race-lane {
+  background: var(--background);
+  border-radius: 12px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 100px;
+}
+
+.race-lane.winner {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, var(--background) 50%);
+  border: 2px solid gold;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.lane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.car-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rank {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  min-width: 35px;
+}
+
+.car-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.win-probability {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  border: 1px solid #FFD700;
+}
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--text);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.car-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.winner-badge {
+  font-size: 1.3rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.car-stats {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.position {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+.speed {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-family: 'Orbitron', sans-serif;
+}
+
+.track-line {
+  position: relative;
+  height: 50px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.track-background {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--surface-light) 0px,
+    var(--surface-light) 20px,
+    var(--surface) 20px,
+    var(--surface) 40px
+  );
+  border: 2px solid var(--border);
+  border-radius: 8px;
+}
+
+.finish-line {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: repeating-linear-gradient(
+    0deg,
+    #000 0px,
+    #000 10px,
+    #fff 10px,
+    #fff 20px
+  );
+}
+
+.car-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  max-width: 100%;
+  transition: width 0.2s linear;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
+  border-radius: 8px 0 0 8px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.car-icon {
+  font-size: 2rem;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+  animation: carBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes carBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.track-footer {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.finish-marker {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
